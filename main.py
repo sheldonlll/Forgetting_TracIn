@@ -7,12 +7,12 @@ from matplotlib import pyplot as plt
 from torchvision import datasets
 from torch import optim
 
-from tool.CONSTANTS import data_transform
+from tool.CONSTANTS import * # lr, test_batch_size, train_batch_size, epoches, checking_points_cpts1, checking_points_cpts2, data_transform, acc_detail_per_epoch_file_path
 from tool.model import resnet34
 
 from tool.forgettingScore import process_train_data_via_forgetting
 from tool.tracIn import process_train_data_via_tracIn
-from tool.maintool import select_train_dataloader_via_forgetting_tracin, compare_result_if_filtered_or_not
+from tool.maintool import * # select_train_dataloader_via_forgetting_tracin, compare_result_if_filtered_or_not, find_correlation_between_Forgetting_and_TracIn
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
@@ -26,6 +26,28 @@ def load_data(data_trasform = data_transform, test_batch_size = 32, train_batch_
     cifar10_train_dataloader = torch.utils.data.DataLoader(cifar10_train, batch_size = train_batch_size, shuffle = shuffle, num_workers = kwargs["num_workers"], pin_memory = kwargs["pin_memory"])
     cifar10_test_dataloader = torch.utils.data.DataLoader(cifar10_test, batch_size = test_batch_size, shuffle = shuffle, num_workers = kwargs["num_workers"], pin_memory = kwargs["pin_memory"])
     return cifar10_train_dataloader, cifar10_test_dataloader
+
+
+def draw_accuracy_loss_line(tot_epoch, loss_lst, acc_lst):
+    #画loss，acc line
+    x_epoches = np.arange(tot_epoch)
+    loss_lst = np.array(loss_lst)
+    acc_lst = np.array(acc_lst)
+    plt.plot(x_epoches, loss_lst, label = "loss line")
+    plt.plot(x_epoches, acc_lst, label = "accuracy line")
+    plt.title("loss, accuracy -- line")
+    plt.xlabel("epoch")
+    plt.legend()
+    plt.show()
+
+
+def save_accuracy_per_epoch_detail(accuracy_detail_dict, file_path):
+    #保存预测结果
+    with open(file_path, "w+") as f:
+        cur_data = ""
+        for key in sorted(accuracy_detail_dict.keys()):
+            cur_data += "epoch_" + str(key) + " = " + str(accuracy_detail_dict[key]) + "\n"
+        f.write(cur_data)
 
 
 def train_predict(train_dataloader, test_dataloader, lr, epoches, save_checking_points = True, checking_points_path = "./cpts/"):
@@ -90,45 +112,36 @@ def train_predict(train_dataloader, test_dataloader, lr, epoches, save_checking_
 
             accuracy = tot_correct / tot_num
             print(f"launchTimestamp: {launchTimestamp} epoch: {epoch + 1}, accuracy: {accuracy}")
+
         acc_lst.append(accuracy)
         torch.save({"epoch": epoch + 1, "state_dict": model.state_dict(), "min_loss": lossMIN, "optimizer": optimizer.state_dict()}, 
                     checking_points_path + "-" + str("%.4f" % lossMIN) + ".pth.tar")
 
         tot_epoch += 1
 
-    #画loss，acc line
-    x_epoches = np.arange(tot_epoch)
-    loss_lst = np.array(loss_lst)
-    acc_lst = np.array(acc_lst)
-    plt.plot(x_epoches, loss_lst, label = "loss line")
-    plt.plot(x_epoches, acc_lst, label = "accuracy line")
-    plt.xlabel("epoch")
-    plt.legend()
-    plt.show()
-    #保存预测结果
-    with open("acc_per_epoch_detail_lst.txt", "w+") as f:
-        cur_data = ""
-        for key in sorted(accuracy_detail_dict.keys()):
-            cur_data += "epoch_" + str(key) + " = " + str(accuracy_detail_dict[key]) + "\n"
-        f.write(cur_data)
-    
+    draw_accuracy_loss_line(tot_epoch = tot_epoch, loss_lst = loss_lst, acc_lst = acc_lst)
+    save_accuracy_per_epoch_detail(accuracy_detail_dict = accuracy_detail_dict, file_path = acc_detail_per_epoch_file_path)
+
     return model
 
 
 def main():
     torch.cuda.empty_cache()
 
-    train_dataloader, test_dataloader = load_data(test_batch_size = 256, train_batch_size = 1280, download = True, shuffle = True)
+    train_dataloader, test_dataloader = load_data(test_batch_size = test_batch_size, train_batch_size = train_batch_size, download = True, shuffle = True)
     
-    result_no_filter_train_data = train_predict(train_dataloader, test_dataloader, lr = 1e-3, epoches = 42,save_checking_points = True, checking_points_path = "./cpts1/")
+    result_no_filter_train_data = train_predict(train_dataloader, test_dataloader, lr = lr, epoches = epoches,save_checking_points = True, checking_points_path = checking_points_cpts1)
     
+    # TODO
     train_dataloader_via_forgetting = process_train_data_via_forgetting(train_dataloader)
-    train_dataloader_via_tracIn = process_train_data_via_tracIn(train_dataloader)
+    train_dataloader_via_tracIn = process_train_data_via_tracIn(lr = lr, test_batch_size = test_batch_size, checking_points_path = checking_points_cpts1, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
     train_dataloader = select_train_dataloader_via_forgetting_tracin(train_dataloader_via_forgetting, train_dataloader_via_tracIn)
     
-    result_filtered_train_data = train_predict(train_dataloader, test_dataloader, lr = 1e-3, epoches = 42, save_checking_points = True, checking_points_path = "./cpts2/")
+    result_filtered_train_data = train_predict(train_dataloader, test_dataloader, lr = lr, epoches = epoches, save_checking_points = True, checking_points_path = checking_points_cpts2)
     
     compare_result_if_filtered_or_not(result_no_filter_train_data, result_filtered_train_data)
+
+    find_correlation_between_Forgetting_and_TracIn(train_dataloader_via_forgetting, train_dataloader_via_tracIn)
 
 
 if __name__ == "__main__":
