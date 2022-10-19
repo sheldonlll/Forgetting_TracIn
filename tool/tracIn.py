@@ -2,6 +2,7 @@ import time
 import os
 import torch
 from torch import nn
+from Forgetting_TracIn.tool.data_get import dataset_get
 
 from tool.model import resnet34
 from tool.data_get import dataset_category_get
@@ -29,10 +30,11 @@ def calculate_tracin(path, file_name, learning_rate, batch_size, train_dataloade
 
     loss_fn = nn.CrossEntropyLoss()
 
-    img_all_train, img_all_test = dataset_category_get(0, train_dataloader, test_dataloader)
+    # img_all_train, img_all_test = dataset_category_get(category_num = 0, train_size = , test_size = , train_dataloader = , test_dataloader = )
+    img_all_train, img_all_test = dataset_get(train_dataloader = train_dataloader, test_dataloader = test_dataloader)
 
-    train_size = 500
-    test_size = 100
+    train_size = len(train_dataloader)
+    test_size = len(test_dataloader)
 
     img_all_train = img_all_train.view(train_size, 1, 3, 224, 224)
     img_all_test = img_all_test.view(test_size, 1, 3, 224, 224)

@@ -130,18 +130,17 @@ def main():
 
     train_dataloader, test_dataloader = load_data(test_batch_size = test_batch_size, train_batch_size = train_batch_size, download = True, shuffle = True)
     
-    result_no_filter_train_data = train_predict(train_dataloader, test_dataloader, lr = lr, epoches = epoches,save_checking_points = True, checking_points_path = checking_points_cpts1)
-    
-    # TODO
-    train_dataloader_via_forgetting = process_train_data_via_forgetting(train_dataloader)
-    train_dataloader_via_tracIn = process_train_data_via_tracIn(lr = lr, test_batch_size = test_batch_size, checking_points_path = checking_points_cpts1, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
-    train_dataloader = select_train_dataloader_via_forgetting_tracin(train_dataloader_via_forgetting, train_dataloader_via_tracIn)
-    
-    result_filtered_train_data = train_predict(train_dataloader, test_dataloader, lr = lr, epoches = epoches, save_checking_points = True, checking_points_path = checking_points_cpts2)
-    
-    compare_result_if_filtered_or_not(result_no_filter_train_data, result_filtered_train_data)
+    result_no_filter_train_data = train_predict(train_dataloader = train_dataloader, test_dataloader = test_dataloader, lr = lr, epoches = epoches, save_checking_points = True, checking_points_path = checking_points_cpts1)
 
-    find_correlation_between_Forgetting_and_TracIn(train_dataloader_via_forgetting, train_dataloader_via_tracIn)
+    train_dataloader_via_forgetting = process_train_data_via_forgetting(train_dataloader = train_dataloader)
+    train_dataloader_via_tracIn = process_train_data_via_tracIn(lr = lr, test_batch_size = test_batch_size, checking_points_path = checking_points_cpts1, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
+    train_dataloader = select_train_dataloader_via_forgetting_tracin(train_dataloader_via_forgetting = train_dataloader_via_forgetting, train_dataloader_via_tracIn = train_dataloader_via_tracIn)
+    
+    result_filtered_train_data = train_predict(train_dataloader = train_dataloader, test_dataloader = test_dataloader, lr = lr, epoches = epoches, save_checking_points = True, checking_points_path = checking_points_cpts2)
+    
+    compare_result_if_filtered_or_not(result_no_filter_train_data = result_no_filter_train_data, result_filtered_train_data = result_filtered_train_data)
+
+    find_correlation_between_Forgetting_and_TracIn(train_dataloader_via_forgetting = train_dataloader_via_forgetting, train_dataloader_via_tracIn = train_dataloader_via_tracIn)
 
 
 if __name__ == "__main__":

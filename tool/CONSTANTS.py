@@ -17,4 +17,5 @@ data_transform = {
                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 }
 
-acc_detail_per_epoch_file_path = "C:\\Users\\Sherlock\\Desktop\\pycodes\\ForgettingScore\\acc_per_epoch_detail_lst.txt"
+acc_detail_per_epoch_file_path = "C:\\Users\\Sherlock\\Desktop\\pycodes\\Forgetting_TracIn\\acc_per_epoch_detail_lst.txt"
+forgetting_score_results = "C:\\Users\\Sherlock\\Desktop\\pycodes\\Forgetting_TracIn\\forgetting_score_results.txt"

@@ -2,13 +2,14 @@ import os
 import json
 from itertools import chain
 
+from Forgetting_TracIn.tool import CONSTANTS
+
 
 all_epoch_detail_dict = {}
-len_per_epoch = 0
 
 
 def prepare_data(data):
-    global len_per_epoch
+    len_per_epoch = 0
     
     for i in range(len(data)):
         epoch_idx, current_epoch_accuracy_detail_str = data[i].split(" = ")[0], data[i].split(" = ")[-1]
@@ -19,8 +20,10 @@ def prepare_data(data):
         len_per_epoch = len(current_epoch_accuracy_detail_lst)
         all_epoch_detail_dict[epoch_idx] = current_epoch_accuracy_detail_lst
 
+    return len_per_epoch
 
-def Algorithm_1_Computing_forgetting_statistics(to_shuffle = False):
+
+def Algorithm_1_Computing_forgetting_statistics(to_shuffle = False, len_per_epoch = 0):
     forgetting_event_happend_state = [False for _ in range(len_per_epoch)]
     learning_event_happend_state = [False for _ in range(len_per_epoch)]
     first_learning_event_happened_state = [-1 for _ in range(len_per_epoch)]
@@ -68,16 +71,17 @@ def process_train_data_via_forgetting(train_dataloader):
     file_data = None
     file_path = input("输入每经过一个epoch后, 记录有每个测试数据的标签正误的文件(文件格式：epoch_0 = [...] epoch_1 = [...])路径：")
     if os.path.exists(file_path) == False:
-        file_path = "C:\\Users\\Sherlock\\Desktop\\pycodes\\ForgettingScore\\acc_per_epoch_detail_lst.txt"
+        file_path = CONSTANTS.acc_detail_per_epoch_file_path
         with open(file_path, "r") as f:
             file_data = f.readlines()
 
-        prepare_data(file_data)
-        tot_forgetting_score, unforgettable_examples, forgettable_examples, first_learning_event_happened_state, first_forgetting_event_happend_state = Algorithm_1_Computing_forgetting_statistics(to_shuffle = False) #计算forgettingscore
-        with open("forgetting_score_results.txt", "w+") as f:
-            data = "tot_forgetting_score:\n" + str(tot_forgetting_score) + "\n" + "\nunforgettable_examples:\n"+ str(unforgettable_examples) + "\n" + "\nforgettable_examples:\n" + str(forgettable_examples) + "\nfirst_learning_event_happened_state:\n" + str(first_learning_event_happened_state) + "\nfirst_forgetting_event_happend_state:\n" + str(first_forgetting_event_happend_state)
+        len_per_epoch = prepare_data(file_data)
+        tot_forgetting_score, unforgettable_examples, forgettable_examples, first_learning_event_happened_state, first_forgetting_event_happend_state = Algorithm_1_Computing_forgetting_statistics(to_shuffle = False, len_per_epoch = len_per_epoch) #计算forgettingscore
+        with open(CONSTANTS.forgetting_score_results, "w+") as f:
+            data = "tot_forgetting_score:\n" + str(tot_forgetting_score) + "\nunforgettable_examples:\n"+ str(unforgettable_examples) + "\nforgettable_examples:\n" + str(forgettable_examples) + "\nfirst_learning_event_happened_state:\n" + str(first_learning_event_happened_state) + "\nfirst_forgetting_event_happend_state:\n" + str(first_forgetting_event_happend_state)
             f.write(data)
     else:
         with open(file_path, "r") as f:
             file_data = f.readlines()
-        Algorithm_1_Computing_forgetting_statistics(to_shuffle = False)
+        len_per_epoch = int(input("len_per_epoch: "))
+        Algorithm_1_Computing_forgetting_statistics(to_shuffle = False, len_per_epoch = len_per_epoch)
