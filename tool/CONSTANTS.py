@@ -4,8 +4,9 @@ lr = 1e-3
 test_batch_size = 256
 train_batch_size = 1200
 epoches = 42
-checking_points_cpts1 = "./cpts1"
-checking_points_cpts2 = "./cpts2"
+
+checking_points_cpts1 = "./cpts1/"
+checking_points_cpts2 = "./cpts2/"
 
 data_transform = {
 "train": transforms.Compose([transforms.Resize((32, 32)),
@@ -19,3 +20,5 @@ data_transform = {
 
 acc_detail_per_epoch_file_path = "C:\\Users\\Sherlock\\Desktop\\pycodes\\Forgetting_TracIn\\acc_per_epoch_detail_lst.txt"
 forgetting_score_results = "C:\\Users\\Sherlock\\Desktop\\pycodes\\Forgetting_TracIn\\forgetting_score_results.txt"
+TracIn_results = "C:\\Users\\Sherlock\\Desktop\\pycodes\\Forgetting_TracIn\\Tracin_results"
+TracIn_original_train_indexes_original_test_indexes = "C:\\Users\\Sherlock\\Desktop\\pycodes\\Forgetting_TracIn\\TracIn_original_train_indexes_original_test_indexes"

@@ -2,7 +2,7 @@ import os
 import json
 from itertools import chain
 
-from Forgetting_TracIn.tool import CONSTANTS
+from tool import CONSTANTS
 
 
 all_epoch_detail_dict = {}

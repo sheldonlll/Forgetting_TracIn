@@ -52,9 +52,10 @@ def save_accuracy_per_epoch_detail(accuracy_detail_dict, file_path):
 
 def train_predict(train_dataloader, test_dataloader, lr, epoches, save_checking_points = True, checking_points_path = "./cpts/"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = resnet34.to(device)
+    model = resnet34().to(device)
+
     criteon = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = optim.Adam(model.paremeters(), lr = lr)
+    optimizer = optim.Adam(model.parameters(), lr = lr)
 
     loss_lst, acc_lst = [], []
     accuracy_detail_dict = {}
@@ -74,7 +75,7 @@ def train_predict(train_dataloader, test_dataloader, lr, epoches, save_checking_
                 loss = criteon(logits, label)
                 lossMIN = min(lossMIN, loss)
                 optimizer.zero_grad()
-                loss.backword()
+                loss.backward()
                 optimizer.step()
             except RuntimeError as exception:
                 if "out of memory" in str(exception):
@@ -108,14 +109,14 @@ def train_predict(train_dataloader, test_dataloader, lr, epoches, save_checking_
                     accuracy_detail_dict[tot_epoch].append(result.int().tolist())
                 
                 tot_correct += result.float().sum().item()
-                tot_num += x.shape(0) # [batchsize, 10]
+                tot_num += x.shape[0] # [batchsize, 10]
 
             accuracy = tot_correct / tot_num
             print(f"launchTimestamp: {launchTimestamp} epoch: {epoch + 1}, accuracy: {accuracy}")
 
         acc_lst.append(accuracy)
         torch.save({"epoch": epoch + 1, "state_dict": model.state_dict(), "min_loss": lossMIN, "optimizer": optimizer.state_dict()}, 
-                    checking_points_path + "-" + str("%.4f" % lossMIN) + ".pth.tar")
+                    checking_points_path + "/m-" + launchTimestamp + "-" + str(epoch) + "-" + str("%.4f" % lossMIN) + ".pth.tar")
 
         tot_epoch += 1
 
@@ -132,15 +133,16 @@ def main():
     
     result_no_filter_train_data = train_predict(train_dataloader = train_dataloader, test_dataloader = test_dataloader, lr = lr, epoches = epoches, save_checking_points = True, checking_points_path = checking_points_cpts1)
 
-    train_dataloader_via_forgetting = process_train_data_via_forgetting(train_dataloader = train_dataloader)
-    train_dataloader_via_tracIn = process_train_data_via_tracIn(lr = lr, test_batch_size = test_batch_size, checking_points_path = checking_points_cpts1, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
-    train_dataloader = select_train_dataloader_via_forgetting_tracin(train_dataloader_via_forgetting = train_dataloader_via_forgetting, train_dataloader_via_tracIn = train_dataloader_via_tracIn)
+    process_train_data_via_forgetting(train_dataloader = train_dataloader)
+    process_train_data_via_tracIn(lr = lr, test_batch_size = test_batch_size, checking_points_path = checking_points_cpts1, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
+    
+    train_dataloader = select_train_dataloader_via_forgetting_tracin(train_dataloader = train_dataloader)
     
     result_filtered_train_data = train_predict(train_dataloader = train_dataloader, test_dataloader = test_dataloader, lr = lr, epoches = epoches, save_checking_points = True, checking_points_path = checking_points_cpts2)
     
     compare_result_if_filtered_or_not(result_no_filter_train_data = result_no_filter_train_data, result_filtered_train_data = result_filtered_train_data)
 
-    find_correlation_between_Forgetting_and_TracIn(train_dataloader_via_forgetting = train_dataloader_via_forgetting, train_dataloader_via_tracIn = train_dataloader_via_tracIn)
+    find_correlation_between_Forgetting_and_TracIn()
 
 
 if __name__ == "__main__":

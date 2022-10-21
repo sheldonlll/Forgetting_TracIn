@@ -1,13 +1,16 @@
+from glob import glob
 import time
 import os
 import torch
 from torch import nn
-from Forgetting_TracIn.tool.data_get import dataset_get
 
 from tool.model import resnet34
-from tool.data_get import dataset_category_get
+from tool.data_get import dataset_category_get, dataset_get
+from tool.CONSTANTS import *
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+original_train_indexes, original_test_indexes = [], []
 
 
 def get_gradient(grads, model):
@@ -18,7 +21,7 @@ def tracin_get(a, b):
     return sum([torch.dot(at.flatten(), bt.flatten()) for at, bt in zip(a, b)])
 
 
-def calculate_tracin(path, file_name, learning_rate, batch_size, train_dataloader, test_dataloader):
+def calculate_tracin(category_num, path, file_name, learning_rate, batch_size, train_dataloader, test_dataloader):
     model_weight_path = path + file_name
     assert os.path.exists(model_weight_path), "file {} does not exist.".format(model_weight_path)
 
@@ -30,8 +33,10 @@ def calculate_tracin(path, file_name, learning_rate, batch_size, train_dataloade
 
     loss_fn = nn.CrossEntropyLoss()
 
-    # img_all_train, img_all_test = dataset_category_get(category_num = 0, train_size = , test_size = , train_dataloader = , test_dataloader = )
-    img_all_train, img_all_test = dataset_get(train_dataloader = train_dataloader, test_dataloader = test_dataloader)
+    global original_train_indexes
+    global original_test_indexes
+    
+    img_all_train, img_all_test, original_train_indexes, original_test_indexes = dataset_category_get(category_num = category_num, train_size = len(train_dataloader), test_size = len(test_dataloader), train_dataloader = train_dataloader, test_dataloader = test_dataloader)
 
     train_size = len(train_dataloader)
     test_size = len(test_dataloader)
@@ -70,13 +75,23 @@ def process_train_data_via_tracIn(lr, test_batch_size, checking_points_path, tra
     batch_size = test_batch_size
     path = checking_points_path
 
-    for file_name in os.listdir(path):
-        current_epoch_score_list = calculate_tracin(path = path, file_name = file_name, learning_rate = learning_rate, batch_size = batch_size, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
-        if len(score_final) == 0:
-            score_final = current_epoch_score_list
-        else:
-            temp_list = []
-            for x, y in zip(current_epoch_score_list, score_final):
-                temp_list.append(x + y)
-            score_final = temp_list
-    print(score_final)
+    for category_num in range(10):
+        for file_name in os.listdir(path):
+            current_epoch_score_list = calculate_tracin(category_num = category_num, path = path, file_name = file_name, learning_rate = learning_rate, batch_size = batch_size, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
+            if len(score_final) == 0:
+                score_final = current_epoch_score_list
+            else:
+                temp_list = []
+                for x, y in zip(current_epoch_score_list, score_final):
+                    temp_list.append(x + y)
+                score_final = temp_list
+        print(score_final)
+
+        with open(TracIn_results + "_" + str(category_num) + ".txt", "w+") as f:
+            cur_data = str(score_final)
+            f.write(cur_data)
+
+        with open(TracIn_original_train_indexes_original_test_indexes + "_" + str(category_num) + ".txt", "w+") as f:
+            cur_data = str(original_train_indexes) + "\n" + str(original_test_indexes)
+            f.write(cur_data)
+
