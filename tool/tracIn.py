@@ -1,4 +1,3 @@
-from glob import glob
 import time
 import os
 import torch
@@ -77,6 +76,7 @@ def process_train_data_via_tracIn(lr, test_batch_size, checking_points_path, tra
 
     for category_num in range(10):
         for file_name in os.listdir(path):
+            if os.path.isdir(path + file_name): continue
             current_epoch_score_list = calculate_tracin(category_num = category_num, path = path, file_name = file_name, learning_rate = learning_rate, batch_size = batch_size, train_dataloader = train_dataloader, test_dataloader = test_dataloader)
             if len(score_final) == 0:
                 score_final = current_epoch_score_list

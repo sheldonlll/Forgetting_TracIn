@@ -66,7 +66,7 @@ def train_predict(train_dataloader, test_dataloader, lr, epoches, save_checking_
         loss = torch.tensor(-1.0)
         lossMIN = 0x3fff
         launchTimestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         for _, (x, label) in enumerate(train_dataloader):
             x, label = x.to(device), label.to(device)
 
