@@ -37,8 +37,8 @@ def calculate_tracin(category_num, path, file_name, learning_rate, batch_size, t
     
     img_all_train, img_all_test, original_train_indexes, original_test_indexes = dataset_category_get(category_num = category_num, train_size = len(train_dataloader), test_size = len(test_dataloader), train_dataloader = train_dataloader, test_dataloader = test_dataloader)
 
-    train_size = len(train_dataloader)
-    test_size = len(test_dataloader)
+    train_size = 500
+    test_size = 100
 
     img_all_train = img_all_train.view(train_size, 1, 3, 224, 224)
     img_all_test = img_all_test.view(test_size, 1, 3, 224, 224)
