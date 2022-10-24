@@ -44,6 +44,7 @@ def calculate_tracin(category_num, path, file_name, learning_rate, batch_size, t
     img_all_test = img_all_test.view(test_size, 1, 3, 224, 224)
 
     label_train = torch.zeros(1).long()
+    label_train[0] = category_num
     logits_train = net(img_all_train[0].to(device))
     loss_train = loss_fn(logits_train, label_train.to(device))
     grad_z_train = torch.autograd.grad(loss_train, net.parameters())
@@ -54,7 +55,7 @@ def calculate_tracin(category_num, path, file_name, learning_rate, batch_size, t
 
     for i in range(test_size):
         label_test = torch.zeros(1).long()
-        label_test[0] = 0
+        label_test[0] = category_num
         logits_test = net(img_all_test[i].to(device))
         loss_test = loss_fn(logits_test, label_test.to(device))
         grad_z_test = torch.autograd.grad(loss_test, net.parameters())
